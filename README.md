@@ -5,6 +5,7 @@ Tools for the fictitious band name repository
 
 ## Workflow
 How to use this:
+
 1. put the table on the internet somewhere
 2. use the scripts to update posts.json
 3. repeat step two as often as you want
