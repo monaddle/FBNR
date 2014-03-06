@@ -1,0 +1,152 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>Fictitious Band Name Repository Posts</title>
+  <link rel="stylesheet" href="slickgrid/slick.grid.css" type="text/css"/>
+  <link rel="stylesheet" href="slickgrid/css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+  <link rel="stylesheet" href="slickgrid/examples/examples.css" type="text/css"/>
+  <link rel="stylesheet" href="chosen.css">
+  <link rel="stylesheet" href="">
+  <style>
+  #search_box{
+    height:23px;
+    width:294px;
+  }
+  </style>
+</head>
+<body>
+<table width="100%">
+  <tr>
+    <td valign="top" width="50%">
+      <div id="myGrid" style="width:1000px;height:500px;"></div>
+    </td>
+    <td valign="top">
+      <h2>Repository Member Filter</h2>
+      <select style="width:300px;" id="name_select" multiple>
+      </select>
+      <br>
+      <h2> Search </h2>
+      <input id="search_box">
+    </td>
+  </tr>
+</table>
+
+<script src="slickgrid/lib/jquery-1.7.min.js"></script>
+<script src="slickgrid/lib/jquery.event.drag-2.2.js"></script>
+<script src="chosen.jquery.js" type="text/javascript"></script>
+<script src="slickgrid/slick.core.js"></script>
+<script src="slickgrid/slick.grid.js"></script>
+<script src="slickgrid/slick.dataview.js"></script>
+<script src="slick.autotooltips.js"></script>
+ <script src="posts.json" type="text/javascript"></script>
+<script src="joindates.js" type="text/javascript"></script>
+<script>
+  var filterArgs = [];
+  var filterSearch = "";
+  var grid;
+  joindates.push("Daniel Porter|asdf");
+  joindates.sort();
+var columns = [
+     {id: "sel", name: "#", field: "id", behavior: "select", cssClass: "cell-selection", width:40, resizable: false },
+     {id: "name", name: "Name", field: "name", width:120, minWidth:120, cssClass: "cell-title", sortable: true},
+     {id: "msg", name:"Post", field:"message", width:400, minWidth:120 },
+     {id: "likes", name:"# Likes", field:"likes", width:40, sortable:true},
+     {id: "date", name:"Date", field:"date", width:150, sortable:true},
+     {id: "permalink", name:"Permalink", field:"permalnk", width:100,
+	formatter: linkFormatter = function ( row, cell, value, columnDef, dataContext ) {
+	    return '<a href="' + value + '" target="_blank"> Link </a>';
+	}}
+];
+  var options = {
+    enableCellNavigation: true,
+    enableColumnReorder: false
+  };
+
+function myFilter(item, args){
+    if(args.search.trim() != "") {
+	if( item["message"].toLowerCase().indexOf(args.search.toLowerCase()) == -1) {
+	    return false;
+	}
+    }
+    if(args.names.length > 0)
+    {
+	for(var i = 0; i < args.names.length; i++)
+	{
+	    if(item["name"] == args.names[i])
+	    {
+		return true;
+	    }
+	}
+	return false;
+    }
+    else
+	return true;
+}
+  $(function () {
+    dataView = new Slick.Data.DataView();
+    for(var i = 0; i < posts.length; i++)
+    {
+	posts[i]["id"] = i.toString();
+	posts[i]["likes"] = parseInt(posts[i]["likes"]);
+    }
+    dataView.setItems(posts);
+    dataView.sort(function(a,b) { return a["likes"] > b["likes"] ? 1: -1;}, false);
+    grid = new Slick.Grid("#myGrid", dataView, columns, options);
+    grid.registerPlugin(new Slick.AutoTooltips());
+    grid.setSortColumn("likes", false); 
+    for(var i = 0; i < joindates.length; i++)
+    {
+	var a = $('<option></option>');
+	a.text(joindates[i].split("|")[0]);
+	$("#name_select")[0].appendChild(a[0]);
+    }
+    $("#name_select").chosen().change(function(e, args) { 
+	 if("deselected" in args)
+	 {
+	    index = filterArgs.indexOf(args["deselected"]);
+	    if(index > -1) {
+		filterArgs.splice(index, 1);
+	    }
+	 }
+	else if("selected" in args)
+	{
+	    filterArgs.push(args["selected"]);   
+	}
+	updateFilter();
+    });
+    $('#search_box').bind('input', function() { 
+        filterSearch =$(this).val();
+	updateFilter();
+    });
+    dataView.onRowCountChanged.subscribe(function (e, args) {
+	grid.updateRowCount();
+	grid.render();
+    });
+
+    grid.onSort.subscribe(function(e, args) {
+	var comprarer = function(a,b){
+	    return (a[args.sortCol.field] > b[args.sortCol.field]) ? 1: -1;
+	}
+	dataView.sort(comprarer, args.sortAsc);
+    });
+    dataView.onRowsChanged.subscribe(function (e, args) {
+	grid.invalidateRows(args.rows);
+        grid.render();
+    });
+    dataView.beginUpdate();
+    dataView.setFilterArgs({names:filterArgs, search:filterSearch})
+    dataView.setFilter(myFilter);
+    dataView.endUpdate();
+  })
+
+function updateFilter() {
+    dataView.setFilterArgs({names:filterArgs, search:filterSearch});
+    dataView.refresh();
+    grid.updateRowCount();
+    grid.render();
+}
+</script>
+</body>
+</html>
