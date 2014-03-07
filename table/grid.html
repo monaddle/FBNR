@@ -48,6 +48,13 @@
   var grid;
   joindates.push("Daniel Porter|asdf");
   joindates.sort();
+  var names = {};
+  for(var i = 0; i < joindates.length; i++){
+    names[joindates[i].split('|')[0]] = 0;
+  }
+  for(var i = 0; i < posts.length; i++){
+    names[posts[i].name] = 0;
+  }
 var columns = [
      {id: "sel", name: "#", field: "id", behavior: "select", cssClass: "cell-selection", width:40, resizable: false },
      {id: "name", name: "Name", field: "name", width:120, minWidth:120, cssClass: "cell-title", sortable: true},
@@ -96,10 +103,12 @@ function myFilter(item, args){
     grid = new Slick.Grid("#myGrid", dataView, columns, options);
     grid.registerPlugin(new Slick.AutoTooltips());
     grid.setSortColumn("likes", false); 
-    for(var i = 0; i < joindates.length; i++)
+    names_list = [];
+    for(var k in names) names_list.push(k);
+    for(var i = 0; i < names_list.length; i++)
     {
 	var a = $('<option></option>');
-	a.text(joindates[i].split("|")[0]);
+	a.text(names_list[i]);
 	$("#name_select")[0].appendChild(a[0]);
     }
     $("#name_select").chosen().change(function(e, args) { 
